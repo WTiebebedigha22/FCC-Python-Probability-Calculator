@@ -1,40 +1,36 @@
+from __future__ import annotations
+
 import copy
 import random
-# Consider using the modules imported above.
+
 
 class Hat:
+    random.seed(95)
 
-  def __init__(self, **kwargs):
-    self.contents = []
-    for key, value in kwargs.items():
-      for _ in range(value):
-        self.contents.append(key)
+    def __init__(self, **kwargs):
+        self.contents = [key for key, value in kwargs.items() for _ in range(value)]
 
-  def draw(self, number):
-    if number > len(self.contents):
-      return self.contents
-    balls = []
-    for _ in range(number):
-      choice = random.randrange(len(self.contents))
-      balls.append(self.contents.pop(choice))
-    return balls
+    def __repr__(self):
+        return f"Hat(contents={self.contents})"
 
-def experiment(hat, expected_balls, num_balls_drawn, num_experiments):
+    def draw(self, num_to_draw: int) -> list[str]:
+        if num_to_draw > len(self.contents):
+            copied_list = self.contents.copy()
+            self.contents.clear()
 
-  expected_no_of_balls = []
-  for key in expected_balls:
-      expected_no_of_balls.append(expected_balls[key])
-  successes = 0
+            return copied_list
 
-  for _ in range(num_experiments):
-    new_hat = copy.deepcopy(hat)
-    balls = new_hat.draw(num_balls_drawn)
+        return [self.contents.pop(random.randrange(0, len(self.contents))) for _ in range(num_to_draw)]
 
-    no_of_balls = []
-    for key in expected_balls:
-      no_of_balls.append(balls.count(key))
 
-    if no_of_balls >= expected_no_of_balls:
-      successes += 1
+def experiment(hat: Hat, expected_balls: dict[str, int], num_balls_drawn: int, num_experiments: int) -> float:
+    count_of_matches: int = 0
 
-  return successes/num_experiments
+    for i in range(num_experiments):
+        copied_hat: Hat = copy.deepcopy(hat)
+        drawn_balls: list[str] = copied_hat.draw(num_balls_drawn)
+        num_of_balls: list[int] = [drawn_balls.count(color) for color in expected_balls]
+        if all(num >= expected for num, expected in zip(num_of_balls, expected_balls.values())):
+            count_of_matches += 1
+
+    return count_of_matches / num_experiments
